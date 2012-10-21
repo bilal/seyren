@@ -13,10 +13,9 @@
  */
 package com.seyren.core.util.email;
 
-import static org.apache.commons.lang.StringUtils.*;
-
 import java.util.Properties;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.slf4j.Logger;
@@ -24,22 +23,21 @@ import org.slf4j.LoggerFactory;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 
 import com.seyren.core.service.schedule.CheckScheduler;
+import com.seyren.core.util.config.SeyrenConfig;
 
 @Named
 public class SeyrenMailSender extends JavaMailSenderImpl {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(CheckScheduler.class);
 	
-    public static final String DEFAULT_SMTP_HOST = "localhost";
-    public static final String DEFAULT_SMTP_PORT = "25";
+	@Inject
+	public SeyrenMailSender(SeyrenConfig seyrenConfig) {
 
-    public SeyrenMailSender() {
-    	
-    	String username = environmentOrDefault("SMTP_USERNAME", "");
-    	String password = environmentOrDefault("SMTP_PASSWORD","");
-    	String hostname = environmentOrDefault("SMTP_HOST", DEFAULT_SMTP_HOST);
-        
-    	setPort(Integer.parseInt(environmentOrDefault("SMTP_PORT", DEFAULT_SMTP_PORT)));
+		String username = seyrenConfig.getSmtpUsername();
+		String password = seyrenConfig.getSmtpPassword();
+		String hostname = seyrenConfig.getSmtpHost();
+
+		setPort(seyrenConfig.getSmtpPort());
     	setHost(hostname);       
         setUsername(username);
         setPassword(password);
@@ -66,13 +64,4 @@ public class SeyrenMailSender extends JavaMailSenderImpl {
     	setPort(port);
     	return this;
     }
-
-	private static String environmentOrDefault(String propertyName, String defaultValue) {
-	    String value = System.getenv(propertyName);
-	    if (isEmpty(value)) {
-	        return defaultValue;
-	    }
-	    return value;
-	}
-
 }

@@ -17,10 +17,15 @@ import static org.apache.commons.lang.StringUtils.*;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.xml.bind.annotation.XmlTransient;
 
 @Named
 public class SeyrenConfig {
 
+	private static final String DEFAULT_MONGO_URL = "mongodb://localhost:27017/seyren";
+	public static final String DEFAULT_SMTP_HOST = "localhost";
+	public static final String DEFAULT_SMTP_PORT = "25";
+	
 	private final GraphiteConfig graphite;
 	private final String baseUrl;
 
@@ -37,6 +42,31 @@ public class SeyrenConfig {
     public String getBaseUrl() {
         return baseUrl;
     }
+
+	public String getMongoUrl() {
+		return getProperty("MONGO_URL", DEFAULT_MONGO_URL);
+	}
+
+	public String getSmtpHost() {
+		return getProperty("SMTP_HOST", DEFAULT_SMTP_HOST);
+	}
+
+	public int getSmtpPort() {
+		return Integer.parseInt(getProperty("SMTP_PORT", DEFAULT_SMTP_PORT));
+	}
+
+	public String getSmtpUsername() {
+		return getProperty("SMTP_USERNAME", "");
+	}
+
+	public String getSmtpPassword() {
+		return getProperty("SMTP_PASSWORD", "");
+	}
+
+	@XmlTransient
+	public String getProperty(String propertyName, String defaultValue) {
+		return environmentOrDefault(propertyName, defaultValue);
+	}
     
     private static String environmentOrDefault(String propertyName, String defaultValue) {
         String value = System.getenv(propertyName);
