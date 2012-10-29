@@ -12,7 +12,6 @@
  * limitations under the License.
  */
 package com.seyren.core.service.schedule;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,17 +46,16 @@ public class CheckScheduler {
 
 	private final ChecksStore checksStore;
 	private final AlertsStore alertsStore;
-	private final NotificationService notificationService;
+	private final List<NotificationService> notificationServices;
 	private final TargetChecker targetChecker;
 	private final ValueChecker valueChecker;
 	private final ScheduledExecutorService executor = Executors.newScheduledThreadPool(8);
 
 	@Inject
-	public CheckScheduler(ChecksStore checksStore, AlertsStore alertsStore, NotificationService notificationService, TargetChecker targetChecker,
-	        ValueChecker valueChecker) {
+	public CheckScheduler(ChecksStore checksStore, AlertsStore alertsStore, List<NotificationService> notificationServices, TargetChecker targetChecker, ValueChecker valueChecker) {
 		this.checksStore = checksStore;
 		this.alertsStore = alertsStore;
-        this.notificationService = notificationService;
+		this.notificationServices = notificationServices;
 		this.targetChecker = targetChecker;
 		this.valueChecker = valueChecker;
 	}
@@ -72,10 +70,7 @@ public class CheckScheduler {
 	
 	@Scheduled(fixedRate = 60000)
 	public void sendStatusEmail() {
-		List<Check> checks = checksStore.getChecks(true).getValues();
-		
-	
-		
+		checksStore.getChecks(true).getValues();
 	}
 	
 	private class CheckRunner implements Runnable {
@@ -164,10 +159,15 @@ public class CheckScheduler {
                         continue;
                     }
                     
-                    try {
-                        notificationService.sendNotification(check, subscription, interestingAlerts);
-                    } catch (Exception e) {
-                        LOGGER.warn("Notifying " + subscription.getTarget() + " failed", e);
+
+                    for (NotificationService notificationService : notificationServices) {
+	                	if (notificationService.canHandle(subscription.getType())) {
+	                		try {
+	                			notificationService.sendNotification(check, subscription, interestingAlerts);
+	                		} catch (Exception e) {
+	                            LOGGER.warn("Notifying " + subscription.getTarget() + " by " + subscription.getType() + " failed.", e);
+	                		}
+	                	}
                     }
                 }
                 
