@@ -50,10 +50,6 @@ public class SeyrenConfig {
         return pagerDutyDomain;
     }
     
-    public String getFromEmail() {
-    	return fromEmail;
-    }
-    
     private static String environmentOrDefault(String propertyName, String defaultValue) {
         String value = System.getenv(propertyName);
         if (isEmpty(value)) {
